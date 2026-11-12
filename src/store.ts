@@ -2,12 +2,21 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { seedListings, type Listing, type PropertyStatus } from "./data";
 
-type UserRole = "student" | "admin";
-type Visit = { listingId: string; date: string };
+export type UserRole = "student" | "admin" | "landlord";
+export type Visit = { id: string; listingId: string; date: string; studentEmail: string };
+export type ContactRequest = {
+  id: string;
+  listingId: string;
+  studentEmail: string;
+  message: string;
+  createdAt: string;
+  status: "new" | "handled";
+};
 type DemoState = {
   listings: Listing[];
   favorites: string[];
   visits: Visit[];
+  contactRequests: ContactRequest[];
   email: string;
   role: UserRole | null;
   calendarDay: number;
@@ -18,9 +27,10 @@ type DemoState = {
   authenticate: (email: string, role: UserRole) => void;
   logout: () => void;
   toggleFavorite: (id: string) => void;
-  scheduleVisit: (id: string) => void;
+  scheduleVisit: (id: string, date: string, studentEmail: string) => void;
   reserveListing: (id: string) => void;
-  contactLandlord: () => void;
+  sendContactRequest: (listingId: string, studentEmail: string, message: string) => void;
+  handleContactRequest: (id: string) => void;
   advanceCalendar: () => void;
   setCalendarDay: (day: number) => void;
   setSpeed: (speed: 1 | 3 | 10) => void;
@@ -35,7 +45,14 @@ type DemoState = {
 
 type PersistedState = Pick<
   DemoState,
-  "listings" | "favorites" | "visits" | "calendarDay" | "speed" | "contactsThisMonth" | "fraudReports"
+  | "listings"
+  | "favorites"
+  | "visits"
+  | "contactRequests"
+  | "calendarDay"
+  | "speed"
+  | "contactsThisMonth"
+  | "fraudReports"
 >;
 
 const identityStorageKey = "roomycampus-identity-v1";
@@ -46,7 +63,7 @@ function readSessionIdentity(): Pick<DemoState, "email" | "role"> {
   if (!saved) return { email: "", role: null };
   try {
     const identity = JSON.parse(saved) as { email?: unknown; role?: unknown };
-    if (typeof identity.email === "string" && (identity.role === "student" || identity.role === "admin")) {
+    if (typeof identity.email === "string" && (identity.role === "student" || identity.role === "admin" || identity.role === "landlord")) {
       return { email: identity.email, role: identity.role };
     }
     throw new Error("La identidad guardada en esta pestaña no es válida.");
@@ -61,6 +78,7 @@ const initialSharedState: PersistedState = {
   listings: seedListings,
   favorites: [],
   visits: [],
+  contactRequests: [],
   calendarDay: 0,
   speed: 1,
   contactsThisMonth: 0,
@@ -88,6 +106,35 @@ const initialState = {
   ...readSessionIdentity(),
 };
 
+export function migratePersistedState(persistedState: unknown): PersistedState {
+  if (!persistedState || typeof persistedState !== "object") return initialSharedState;
+  const saved = persistedState as Partial<PersistedState>;
+  const savedListings = Array.isArray(saved.listings) ? saved.listings : [];
+  const listingIds = new Set(savedListings.map((listing) => listing.id));
+  const listings = [...savedListings, ...seedListings.filter((listing) => !listingIds.has(listing.id))];
+  const visits = (Array.isArray(saved.visits) ? saved.visits : []).flatMap((visit, index) => {
+    if (!visit || typeof visit !== "object") return [];
+    const savedVisit = visit as Partial<Visit>;
+    if (typeof savedVisit.listingId !== "string") return [];
+    const rawDate = typeof savedVisit.date === "string" ? savedVisit.date : "";
+    const date = /^\d{4}-\d{2}-\d{2}/.test(rawDate) ? rawDate.slice(0, 10) : new Date().toISOString().slice(0, 10);
+    return [{
+      id: typeof savedVisit.id === "string" ? savedVisit.id : `legacy-visit-${index}-${savedVisit.listingId}`,
+      listingId: savedVisit.listingId,
+      date,
+      studentEmail: typeof savedVisit.studentEmail === "string" ? savedVisit.studentEmail : "demo@espol.edu.ec",
+    }];
+  });
+
+  return {
+    ...initialSharedState,
+    ...saved,
+    listings,
+    visits,
+    contactRequests: Array.isArray(saved.contactRequests) ? saved.contactRequests : [],
+  };
+}
+
 export const useDemoStore = create<DemoState>()(
   persist(
     (set) => ({
@@ -107,9 +154,12 @@ export const useDemoStore = create<DemoState>()(
             ? state.favorites.filter((favorite) => favorite !== id)
             : [...state.favorites, id],
         })),
-      scheduleVisit: (id) =>
+      scheduleVisit: (id, date, studentEmail) =>
         set((state) => ({
-          visits: [...state.visits, { listingId: id, date: new Date().toISOString() }],
+          visits: [
+            ...state.visits,
+            { id: `visit-${Date.now()}`, listingId: id, date, studentEmail },
+          ],
         })),
       reserveListing: (id) =>
         set((state) => ({
@@ -119,7 +169,27 @@ export const useDemoStore = create<DemoState>()(
               : listing,
           ),
         })),
-      contactLandlord: () => set((state) => ({ contactsThisMonth: state.contactsThisMonth + 1 })),
+      sendContactRequest: (listingId, studentEmail, message) =>
+        set((state) => ({
+          contactsThisMonth: state.contactsThisMonth + 1,
+          contactRequests: [
+            {
+              id: `contact-${Date.now()}`,
+              listingId,
+              studentEmail,
+              message,
+              createdAt: new Date().toISOString(),
+              status: "new",
+            },
+            ...state.contactRequests,
+          ],
+        })),
+      handleContactRequest: (id) =>
+        set((state) => ({
+          contactRequests: state.contactRequests.map((request) =>
+            request.id === id ? { ...request, status: "handled" } : request,
+          ),
+        })),
       advanceCalendar: () =>
         set((state) => dateUpdate(state.listings, state.calendarDay, state.calendarDay + state.speed)),
       setCalendarDay: (calendarDay) =>
@@ -191,11 +261,14 @@ export const useDemoStore = create<DemoState>()(
     {
       name: "roomycampus-demo-v2",
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: migratePersistedState,
       partialize: (state) =>
         ({
           listings: state.listings,
           favorites: state.favorites,
           visits: state.visits,
+          contactRequests: state.contactRequests,
           calendarDay: state.calendarDay,
           speed: state.speed,
           contactsThisMonth: state.contactsThisMonth,
@@ -209,6 +282,7 @@ const persistedKeys = new Set<keyof PersistedState>([
   "listings",
   "favorites",
   "visits",
+  "contactRequests",
   "calendarDay",
   "speed",
   "contactsThisMonth",

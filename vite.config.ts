@@ -10,5 +10,10 @@ export default defineConfig(({ mode }) => {
       __USE_HASH_ROUTER__: JSON.stringify(Boolean(env.VITE_BASE_PATH)),
     },
     plugins: [react()],
+    server: {
+      watch: {
+        ignored: ["**/.tsupgrader/**"],
+      },
+    },
   };
 });

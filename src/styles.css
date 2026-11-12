@@ -123,7 +123,7 @@ h1, h2, h3, strong { letter-spacing: -.025em; }
 .floating-card--verified strong { font-size: 10px; }
 .floating-card--verified small { color: var(--muted); font-size: 9px; }
 .hero-orbit { position: absolute; z-index: -1; top: -50px; right: -40px; width: 215px; height: 215px; border: 1px solid #e8e4fd; border-radius: 50%; box-shadow: 0 0 0 19px rgb(225 223 252 / 32%), 0 0 0 39px rgb(225 223 252 / 17%); }
-.role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+.role-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
 .role-card { display: flex; min-height: 94px; align-items: center; gap: 13px; padding: 18px; border: 1px solid var(--border); border-radius: 17px; background: white; text-align: left; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; }
 .role-card:hover { transform: translateY(-2px); box-shadow: 0 12px 27px rgb(41 35 80 / 8%); }
 .role-card--student { border-color: #ded9fd; background: #fbfaff; }
@@ -227,7 +227,8 @@ h1, h2, h3, strong { letter-spacing: -.025em; }
 .results-column { min-width: 0; }
 .results-heading { display: flex; min-height: 41px; align-items: center; justify-content: space-between; gap: 12px; }
 .results-heading > div { display: grid; gap: 3px; }
-.sort-button { display: inline-flex; align-items: center; gap: 4px; padding: 7px 9px; border: 1px solid #e5e6eb; border-radius: 9px; background: #fff; color: #696e73; cursor: pointer; font-size: 9px; }
+.sort-control { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 9px; white-space: nowrap; }
+.sort-button { min-height: 32px; padding: 0 25px 0 9px; border: 1px solid #e5e6eb; border-radius: 9px; background: #fff; color: #454b50; cursor: pointer; font: inherit; font-size: 9px; }
 .listing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .listing-card { min-width: 0; overflow: hidden; border: 1px solid #e8e9ed; border-radius: 14px; background: #fff; cursor: pointer; transition: box-shadow .18s ease, transform .18s ease; }
 .listing-card:hover { transform: translateY(-2px); box-shadow: 0 11px 25px rgb(42 38 79 / 9%); }
@@ -263,6 +264,26 @@ h1, h2, h3, strong { letter-spacing: -.025em; }
 .visits-strip strong { color: var(--ink); font-size: 10px; }
 .visits-strip small { color: var(--muted); font-size: 9px; }
 .student-bottom-nav { display: none; }
+.visit-calendar { display: grid; width: min(1340px, calc(100% - 50px)); grid-template-columns: minmax(190px, .75fr) minmax(190px, .65fr) minmax(240px, 1fr); align-items: start; gap: 24px; margin: 22px auto 10px; padding: 18px; border: 1px solid #e8e6f4; border-radius: 16px; background: #fff; }
+.visit-calendar__intro h2 { margin: 8px 0 4px; font-size: 17px; }
+.visit-calendar__intro p, .visit-calendar__list > p { color: var(--muted); font-size: 10px; line-height: 1.6; }
+.visit-calendar__count { display: inline-flex; margin-top: 5px; padding: 5px 8px; border-radius: 20px; background: var(--violet-light); color: var(--violet-dark); font-size: 9px; font-weight: 700; }
+.mini-calendar__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.mini-calendar__header > strong { text-transform: capitalize; font-size: 11px; }
+.mini-calendar__header > span { display: flex; gap: 4px; }
+.mini-calendar__header button { display: grid; width: 27px; height: 27px; place-items: center; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: #656b70; cursor: pointer; }
+.mini-calendar__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.mini-calendar__weekday { display: grid; height: 23px; place-items: center; color: #9a9da2; font-size: 8px; font-weight: 700; }
+.mini-calendar__empty { min-height: 29px; }
+.mini-calendar__grid button { display: grid; min-height: 29px; place-items: center; border: 0; border-radius: 8px; background: transparent; color: #555b60; cursor: pointer; font-size: 9px; }
+.mini-calendar__grid button:hover, .mini-calendar__grid .mini-calendar__day--selected { background: var(--violet); color: #fff; }
+.mini-calendar__grid .mini-calendar__day--has-visit:not(.mini-calendar__day--selected) { background: var(--violet-light); color: var(--violet-dark); font-weight: 800; box-shadow: inset 0 -2px var(--violet); }
+.visit-calendar__list { display: grid; gap: 8px; }
+.visit-calendar__list > strong { margin-bottom: 2px; font-size: 10px; }
+.visit-calendar__item { display: flex; align-items: center; gap: 9px; padding: 8px; border: 1px solid #eeedf4; border-radius: 9px; color: var(--violet); }
+.visit-calendar__item > span { display: grid; gap: 3px; }
+.visit-calendar__item b { color: var(--ink); font-size: 9px; text-transform: capitalize; }
+.visit-calendar__item small { color: var(--muted); font-size: 8px; }
 .prototype-footer { width: min(1340px, calc(100% - 50px)); margin: 10px auto 0; color: #999da0; font-size: 9px; }
 .prototype-footer a { margin-left: 8px; color: var(--violet); }
 
@@ -301,6 +322,7 @@ h1, h2, h3, strong { letter-spacing: -.025em; }
 .visit-content, .plan-content { padding: 31px; }
 .visit-content > p, .plan-content > p { margin: 7px 0 18px; color: var(--muted); font-size: 11px; line-height: 1.7; }
 .visit-content form { display: grid; gap: 10px; }
+.visit-content textarea { width: 100%; padding: 11px 12px; border: 1px solid #dedfe5; border-radius: 10px; background: #fff; color: var(--ink); font: inherit; font-size: 11px; line-height: 1.6; resize: vertical; }
 .visit-content form .button { margin-top: 5px; }
 .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
 .plan-card { display: grid; align-content: start; gap: 8px; padding: 15px; border: 1px solid #e9e8ef; border-radius: 14px; color: #656d72; font-size: 10px; }
@@ -331,7 +353,7 @@ h1, h2, h3, strong { letter-spacing: -.025em; }
 .admin-profile small { color: var(--muted); font-size: 8px; }
 .admin-profile > svg { color: #999ca2; }
 .sidebar-label { margin: 25px 9px 9px; color: #a5a8ad; font-size: 8px; font-weight: 800; letter-spacing: .08em; }
-.sidebar-link { display: flex; min-height: 38px; align-items: center; gap: 9px; padding: 0 10px; border-radius: 9px; color: #71787d; font-size: 10px; font-weight: 600; }
+.sidebar-link { display: flex; width: 100%; min-height: 38px; align-items: center; gap: 9px; padding: 0 10px; border: 0; border-radius: 9px; background: transparent; color: #71787d; cursor: pointer; font-family: inherit; font-size: 10px; font-weight: 600; text-align: left; }
 .sidebar-link svg { color: #969ba0; }
 .sidebar-link--active { background: #f1efff; color: var(--violet-dark); }
 .sidebar-link--active svg { color: var(--violet); }
@@ -353,6 +375,36 @@ h1, h2, h3, strong { letter-spacing: -.025em; }
 .admin-topbar__email { color: #777d82; font-size: 9px; }
 .admin-avatar { display: grid; width: 30px; height: 30px; place-items: center; border: 0; border-radius: 9px; background: #ece9ff; color: var(--violet); cursor: pointer; font-size: 8px; font-weight: 800; }
 .admin-content { width: min(1200px, 100%); margin: 0 auto; padding: 22px 27px 24px; }
+.topic-page { display: grid; gap: 12px; margin-top: 12px; }
+.topic-page__note, .analytics-explainer { margin: 0; padding: 13px 15px; border: 1px solid #e7e3fa; border-radius: 12px; background: #fbfaff; color: #666b73; font-size: 10px; line-height: 1.7; }
+.topic-page .monitor-card { padding: 18px; }
+.topic-page .monitor-card .map-frame { height: min(55vh, 500px); }
+.analytics-explainer { margin-top: 12px; }
+.analytics-explainer strong { color: var(--ink); font-size: 11px; }
+.analytics-explainer p { max-width: 760px; }
+.landlord-overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.landlord-property-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.landlord-property-card { overflow: hidden; border: 1px solid #e9eaee; border-radius: 14px; background: #fff; }
+.landlord-property-card > img { width: 100%; height: 150px; object-fit: cover; }
+.landlord-property-card > div { display: grid; justify-items: start; gap: 7px; padding: 13px; }
+.landlord-property-card h2 { margin: 0; font-size: 12px; }
+.landlord-property-card p { margin: 0; color: var(--muted); font-size: 9px; }
+.landlord-property-card > div > strong { font-size: 13px; }
+.landlord-message-list { margin-top: 14px; }
+.contact-request, .resident-review-card, .resident-alert { display: grid; gap: 7px; margin-top: 10px; padding: 12px; border: 1px solid #eeedf3; border-radius: 11px; background: #fff; }
+.contact-request--handled { background: #fafcfb; }
+.contact-request__header, .resident-review-card > div { display: flex; align-items: center; justify-content: space-between; gap: 9px; }
+.contact-request__header > span:first-child { display: grid; gap: 4px; }
+.contact-request__header strong, .resident-review-card strong { font-size: 10px; }
+.contact-request__header small, .contact-request > p, .resident-review-card > p, .resident-alert > p { margin: 0; color: #697076; font-size: 9px; line-height: 1.65; }
+.contact-request .button { min-height: 31px; justify-self: start; padding: 0 9px; font-size: 9px; }
+.resident-review-card > div > span { display: inline-flex; align-items: center; gap: 4px; color: #a97612; font-size: 9px; font-weight: 700; }
+.resident-review-card > div > span svg { color: #e4a626; }
+.resident-review-card > small, .resident-alert > small { color: #989ca1; font-size: 8px; }
+.resident-alert > span { display: flex; align-items: center; gap: 7px; color: #745a1c; }
+.resident-alert > span strong { font-size: 10px; }
+.resident-alert--high { border-color: #f0d7d4; background: #fffafa; }
+.resident-alert--high > span { color: #b83e44; }
 .admin-title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .admin-title-row h1 { margin: 6px 0 4px; font-size: 22px; font-weight: 800; }
 .admin-title-row h1 span { color: var(--violet); }
@@ -497,6 +549,8 @@ kbd { padding: 2px 5px; border: 1px solid rgb(255 255 255 / 23%); border-radius:
   .admin-topbar { padding-right: 18px; padding-left: 18px; }
   .analytics-grid { grid-template-columns: minmax(0, 1.4fr) minmax(210px, .9fr); }
   .admin-bottom-grid { grid-template-columns: 1fr; }
+  .landlord-property-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .visit-calendar { grid-template-columns: minmax(170px, .7fr) minmax(180px, .7fr) minmax(220px, 1fr); gap: 14px; }
 }
 
 @media (max-width: 720px) {
@@ -565,7 +619,10 @@ kbd { padding: 2px 5px; border: 1px solid rgb(255 255 255 / 23%); border-radius:
   .listing-card__meta { font-size: 7px; }
   .listing-card__price-row > strong { font-size: 13px; }
   .listing-card__price-row > span { font-size: 6px; }
-  .visits-strip { width: calc(100% - 28px); margin-top: 14px; }
+  .visit-calendar { width: calc(100% - 28px); grid-template-columns: 1fr; gap: 15px; margin-top: 14px; padding: 13px; }
+  .visit-calendar__intro h2 { font-size: 15px; }
+  .mini-calendar__grid { max-width: 310px; }
+  .visit-calendar__list { min-height: 55px; }
   .student-bottom-nav { position: fixed; z-index: 390; right: 0; bottom: 0; left: 0; display: grid; height: 57px; grid-template-columns: repeat(3, 1fr); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #e8e9ec; background: rgb(255 255 255 / 96%); backdrop-filter: blur(12px); }
   .bottom-nav__item { display: grid; justify-items: center; align-content: center; gap: 2px; border: 0; background: transparent; color: #83888d; cursor: pointer; font-size: 8px; }
   .bottom-nav__item--active { color: var(--violet); }
@@ -592,7 +649,7 @@ kbd { padding: 2px 5px; border: 1px solid rgb(255 255 255 / 23%); border-radius:
   .admin-sidebar { position: relative; inset: auto; display: block; width: 100%; height: auto; padding: 8px 12px; border-right: 0; border-bottom: 1px solid #e9eaed; }
   .admin-sidebar__brand { padding: 0; }
   .admin-sidebar__brand > span, .admin-profile, .sidebar-label, .sidebar-bottom { display: none; }
-  .admin-sidebar > .sidebar-link { display: inline-flex; min-height: 31px; padding: 0 9px; font-size: 8px; }
+  .admin-sidebar > .sidebar-link { display: inline-flex; width: auto; min-height: 31px; padding: 0 9px; font-size: 8px; }
   .admin-sidebar > .sidebar-link svg { width: 13px; }
   .admin-main { margin-left: 0; }
   .admin-topbar { height: 43px; padding: 0 12px; }
@@ -622,6 +679,10 @@ kbd { padding: 2px 5px; border: 1px solid rgb(255 255 255 / 23%); border-radius:
   .chart-note > span:last-child { font-size: 6px; }
   .chart-period { font-size: 7px; }
   .admin-bottom-grid { gap: 9px; margin-top: 9px; }
+  .landlord-overview-grid, .landlord-property-grid { grid-template-columns: 1fr; }
+  .landlord-property-card { display: grid; grid-template-columns: 105px 1fr; }
+  .landlord-property-card > img { height: 100%; min-height: 130px; }
+  .topic-page .monitor-card .map-frame { height: 330px; }
   .review-item__body > div > strong { font-size: 8px; }
   .review-item__body > span, .review-item__body > small { font-size: 7px; }
   .review-item__body > div { flex-wrap: wrap; }

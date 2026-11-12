@@ -42,6 +42,7 @@ Comprobaciones locales:
 ```powershell
 npm run build
 npm run lint
+npm test
 py -3 -m unittest discover -s tests
 ```
 
@@ -49,16 +50,22 @@ py -3 -m unittest discover -s tests
 
 | Vista o función | Dónde verla |
 |---|---|
-| Portada y elección de vista | `/` |
-| Acceso de estudiante (solo correo `@espol.edu.ec`) | `/app` |
-| Mapa interactivo, tarjetas, presupuesto, modalidad y filtro Wifi | `/app`, después del acceso |
-| Detalle, desglose de costos, favoritos, contacto simulado y visita | Selecciona una tarjeta del mapa o de la lista |
+| Portada con accesos diferenciados | `/` |
+| Iniciar sesión de estudiante (correo `@espol.edu.ec`) | `/app` |
+| Crear cuenta de estudiante de demostración | `/registro`; solicita nombre y correo institucional, sin contraseña ni backend |
+| Mapa y catálogo ampliado, filtros y orden por precio, calificación o cercanía | `/app`, después del acceso |
+| Detalle, desglose de costos, favoritos y visita con fecha seleccionada | Selecciona una tarjeta del mapa o de la lista |
+| Contactar al administrador del alojamiento | Detalle → Contactar; el mensaje simulado aparece en `/propietario` → Mensajes |
+| Calendario compacto de citas | `/app` → sección “Visitas”; elige un día para consultar sus solicitudes |
 | Plan Basic / Pro y pago de demostración | Intenta contactar después de alcanzar el límite Basic |
 | Panel gerencial | `/admin`; usa el botón “Entrar como administrador de demo” (`admin@roomycampus.ec`) |
+| Páginas de resumen, monitoreo, verificación y analítica | `/admin`; cada opción lateral abre su propia vista explicativa |
+| Panel de administrador del alojamiento | `/propietario`; cuenta demo `alojamiento@roomycampus.ec` |
+| Comentarios, alertas, consultas y agenda de residentes | `/propietario` → Comentarios y alertas, Mensajes o Visitas |
 | Revisión y rechazo de un anuncio sospechoso | Panel → Bandeja de verificación → anuncio reportado |
 | Analítica de demanda y precio por m²; exportación CSV | Panel gerencial |
 | Control de calendario, ocupación, anuncios y reinicio | Botón flotante “Demo” o atajo `Shift+D` |
-| Estado determinista para grabación automatizada | `/app?guion` o `/admin?guion`; consulta `window.__ROOMYCAMPUS__` |
+| Estado determinista para grabación automatizada | `/app?guion`, `/admin?guion` o `/propietario?guion`; consulta `window.__ROOMYCAMPUS__` |
 
 Para revisar el diseño móvil, abre Chrome DevTools → Device Toolbar → **iPhone 14** (390 × 844) y visita `/app`. La vista administrativa se adapta a pantallas estrechas; su diseño de escritorio está optimizado para 1440 × 900.
 
@@ -83,7 +90,7 @@ El generador consulta Nominatim/Overpass para identificar áreas y accesos, y OS
 | Aprobar siguiente pendiente | Aprueba y publica la siguiente propiedad normal pendiente |
 | Reiniciar datos de demo | Restaura inventario, calendario, favoritos y visitas iniciales |
 
-El estado se guarda en el navegador y se sincroniza entre pestañas mediante `localStorage`. En modo `?guion`, el estado inicial se restablece y se expone el store y sus acciones en `window.__ROOMYCAMPUS__` para preparar tomas repetibles.
+El estado se guarda en el navegador y se sincroniza entre pestañas mediante `localStorage`. Los accesos y cuentas de los tres roles son simulados y se mantienen por pestaña; no hay contraseñas, servicio de identidad ni mensajes reales. Las solicitudes de contacto y visitas se comparten localmente para demostrar el panel del alojamiento. En modo `?guion`, el estado inicial se restablece y se expone el store y sus acciones en `window.__ROOMYCAMPUS__` para preparar tomas repetibles.
 
 ## Documentación adicional
 

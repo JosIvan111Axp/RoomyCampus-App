@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "lint": "oxlint",
+    "test": "vitest run",
     "data:campus": "node scripts/run-python.mjs scripts/generate_campus_data.py"
   },
   "dependencies": {
@@ -27,6 +28,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "oxlint": "^1.15.0",
     "typescript": "~5.9.2",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vitest": "^5.1.0"
   }
 }
