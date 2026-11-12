@@ -22,6 +22,21 @@ npm run dev
 
 Abre la dirección que muestra Vite, normalmente <http://localhost:5173/>. En Windows, el proyecto puede invocar el Python Launcher `py -3`; si no lo tienes, instala Python 3.12+ y usa `python`/`python3` en tus propias pruebas. El lanzador del proyecto verifica la versión y muestra errores en lugar de ignorarlos.
 
+## Publicar en GitHub Pages
+
+El workflow [deploy-pages.yml](./.github/workflows/deploy-pages.yml) compila y publica automáticamente el sitio cuando hay cambios en `main` o al ejecutarlo manualmente desde GitHub Actions. En este repositorio el sitio queda en:
+
+<https://josivan111axp.github.io/RoomyCampus-App/>
+
+Para habilitarlo en GitHub:
+
+1. Abre **Settings → Pages** del repositorio.
+2. En **Build and deployment → Source**, selecciona **GitHub Actions**.
+3. Envía los cambios a la rama `main` (o inicia **Deploy RoomyCampus to GitHub Pages** en la pestaña **Actions**).
+4. Espera a que los trabajos `build` y `deploy` terminen correctamente y abre la URL indicada en **Settings → Pages**.
+
+El workflow define la ruta base `/RoomyCampus-App/` para los recursos del sitio. En el build de producción, la navegación usa rutas con hash para que la portada, `/app` y `/admin` funcionen directamente en el hosting estático; el servidor local conserva sus rutas normales. En Pages, las rutas se ven como `/#/app` y `/#/admin`. El modo de guion está disponible con `/#/app?guion` o `/#/admin?guion`.
+
 Comprobaciones locales:
 
 ```powershell
