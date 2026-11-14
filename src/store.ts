@@ -18,13 +18,15 @@ type DemoState = {
   visits: Visit[];
   contactRequests: ContactRequest[];
   email: string;
+  displayName: string;
   role: UserRole | null;
   calendarDay: number;
   speed: 1 | 3 | 10;
   demoOpen: boolean;
   contactsThisMonth: number;
   fraudReports: number;
-  authenticate: (email: string, role: UserRole) => void;
+  authenticate: (email: string, role: UserRole, displayName?: string) => void;
+  submitListing: (listing: Listing) => void;
   logout: () => void;
   toggleFavorite: (id: string) => void;
   scheduleVisit: (id: string, date: string, studentEmail: string) => void;
@@ -57,20 +59,24 @@ type PersistedState = Pick<
 
 const identityStorageKey = "roomycampus-identity-v1";
 
-function readSessionIdentity(): Pick<DemoState, "email" | "role"> {
-  if (typeof window === "undefined") return { email: "", role: null };
+function readSessionIdentity(): Pick<DemoState, "email" | "displayName" | "role"> {
+  if (typeof window === "undefined") return { email: "", displayName: "", role: null };
   const saved = window.sessionStorage.getItem(identityStorageKey);
-  if (!saved) return { email: "", role: null };
+  if (!saved) return { email: "", displayName: "", role: null };
   try {
-    const identity = JSON.parse(saved) as { email?: unknown; role?: unknown };
+    const identity = JSON.parse(saved) as { email?: unknown; displayName?: unknown; role?: unknown };
     if (typeof identity.email === "string" && (identity.role === "student" || identity.role === "admin" || identity.role === "landlord")) {
-      return { email: identity.email, role: identity.role };
+      return {
+        email: identity.email,
+        displayName: typeof identity.displayName === "string" ? identity.displayName : "",
+        role: identity.role,
+      };
     }
     throw new Error("La identidad guardada en esta pestaña no es válida.");
   } catch (error) {
     console.error("No se pudo recuperar el acceso de demostración de esta pestaña.", error);
     window.sessionStorage.removeItem(identityStorageKey);
-    return { email: "", role: null };
+    return { email: "", displayName: "", role: null };
   }
 }
 
@@ -140,14 +146,15 @@ export const useDemoStore = create<DemoState>()(
     (set) => ({
       ...initialState,
       demoOpen: false,
-      authenticate: (email, role) => {
-        window.sessionStorage.setItem(identityStorageKey, JSON.stringify({ email, role }));
-        set({ email, role });
+      authenticate: (email, role, displayName = "") => {
+        window.sessionStorage.setItem(identityStorageKey, JSON.stringify({ email, role, displayName }));
+        set({ email, role, displayName });
       },
       logout: () => {
         window.sessionStorage.removeItem(identityStorageKey);
-        set({ email: "", role: null });
+        set({ email: "", displayName: "", role: null });
       },
+      submitListing: (listing) => set((state) => ({ listings: [listing, ...state.listings] })),
       toggleFavorite: (id) =>
         set((state) => ({
           favorites: state.favorites.includes(id)
@@ -249,11 +256,18 @@ export const useDemoStore = create<DemoState>()(
             ),
           };
         }),
-      resetDemo: () => set((state) => ({ ...initialSharedState, email: state.email, role: state.role, demoOpen: state.demoOpen })),
+      resetDemo: () => set((state) => ({
+        ...initialSharedState,
+        email: state.email,
+        displayName: state.displayName,
+        role: state.role,
+        demoOpen: state.demoOpen,
+      })),
       importSyncedState: (syncedState) =>
         set((state) => ({
           ...syncedState,
           email: state.email,
+          displayName: state.displayName,
           role: state.role,
           demoOpen: state.demoOpen,
         })),

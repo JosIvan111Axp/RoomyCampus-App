@@ -19,6 +19,7 @@ export type Listing = {
   distanceKm: number;
   verified: boolean;
   reported?: boolean;
+  ownerEmail?: string;
   amenities?: string[];
   landlord: string;
   rating: number;

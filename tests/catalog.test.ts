@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { seedListings, listingPriceBreakdown } from "../src/data";
 import { filterAndSortListings, type CatalogFilters } from "../src/catalog";
-import { migratePersistedState } from "../src/store";
+import { migratePersistedState, useDemoStore } from "../src/store";
 
 const defaultFilters: CatalogFilters = {
   category: "Todos",
@@ -59,5 +59,27 @@ describe("student accommodation catalog", () => {
       studentEmail: "demo@espol.edu.ec",
     }]);
     expect(migrated.listings.length).toBe(seedListings.length);
+  });
+
+  it("adds a landlord submission to the shared inventory as pending verification", () => {
+    const listing = {
+      ...seedListings[0],
+      id: "landlord-submission-test",
+      ownerEmail: "landlord@example.com",
+      status: "pending" as const,
+      verified: false,
+    };
+    const store = useDemoStore.getState();
+    store.resetDemo();
+    store.submitListing(listing);
+
+    expect(useDemoStore.getState().listings[0]).toMatchObject({
+      id: listing.id,
+      ownerEmail: listing.ownerEmail,
+      status: "pending",
+      verified: false,
+    });
+
+    useDemoStore.getState().resetDemo();
   });
 });

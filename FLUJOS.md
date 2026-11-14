@@ -36,7 +36,7 @@ La ocupación se comparte por `localStorage` del mismo navegador; no se sincroni
 
 ## 6. Administrar un alojamiento
 
-1. Abre `/propietario` y entra con `alojamiento@roomycampus.ec` o con el acceso directo de demostración.
+1. Abre `/registro-arrendador` para crear un perfil local, o `/propietario` para ingresar con una cuenta de demostración.
 2. En **Resumen** revisa las solicitudes nuevas, visitas y alertas.
 3. En **Mensajes**, abre la consulta enviada desde una ficha de estudiante y márcala atendida.
 4. En **Comentarios y alertas**, revisa las opiniones y reportes ficticios de residentes.
@@ -44,13 +44,23 @@ La ocupación se comparte por `localStorage` del mismo navegador; no se sincroni
 
 Las cuentas, mensajes, comentarios, propiedades y alertas son datos locales de demo; no representan una comunicación real.
 
-## 7. Aprobar una propiedad y exportar
+## 7. Publicar y verificar un alojamiento
+
+1. En el panel `/propietario`, abre **Mis alojamientos** y pulsa **Agregar alojamiento**.
+2. Completa título, sector, dirección referencial, modalidad, renta, servicios y área.
+3. En **Verificación previa**, confirma que podrías presentar identidad, autorización, fotos y condiciones del contrato.
+4. Envía el anuncio. Aparece como **Por verificar** en tu inventario, pero no se muestra en el catálogo estudiantil.
+5. Ingresa al panel `/admin` con una cuenta de administrador y abre **Verificación**. Revisa y aprueba o rechaza el anuncio.
+
+Las confirmaciones no sustituyen la comprobación de documentos: el prototipo no carga ni valida archivos. Las fotografías y coordenadas añadidas al anuncio son referenciales.
+
+## 8. Aprobar una propiedad y exportar
 
 1. Abre el panel flotante y pulsa **Aprobar siguiente pendiente**. Se publica la propiedad de ejemplo no reportada.
 2. En el panel gerencial, pulsa **Exportar datos**. Se descarga `roomycampus-indicadores-demo.csv`.
 3. El CSV contiene inventario, estado, renta, servicios, total mensual, área y precio por m².
 
-## 8. Repetir tomas de video
+## 9. Repetir tomas de video
 
 1. Abre directamente `/app?guion`, `/admin?guion` o `/propietario?guion`.
 2. El modo guion reinicia el estado y, si entraste directamente al panel, abre su usuario administrador de demostración.

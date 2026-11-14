@@ -51,16 +51,20 @@ py -3 -m unittest discover -s tests
 | Vista o función | Dónde verla |
 |---|---|
 | Portada con accesos diferenciados | `/` |
+| Aviso de privacidad, preferencias y categorías de cookies | Al abrir por primera vez; se puede volver a configurar desde el botón **Cookies** |
 | Iniciar sesión de estudiante (correo `@espol.edu.ec`) | `/app` |
 | Crear cuenta de estudiante de demostración | `/registro`; solicita nombre y correo institucional, sin contraseña ni backend |
+| Crear cuenta de arrendador de demostración | `/registro-arrendador`; permite publicar anuncios pendientes de verificación |
+| Crear cuenta de administrador de demostración | `/registro-admin`; registro abierto solo para demostrar el panel |
 | Mapa y catálogo ampliado, filtros y orden por precio, calificación o cercanía | `/app`, después del acceso |
 | Detalle, desglose de costos, favoritos y visita con fecha seleccionada | Selecciona una tarjeta del mapa o de la lista |
 | Contactar al administrador del alojamiento | Detalle → Contactar; el mensaje simulado aparece en `/propietario` → Mensajes |
 | Calendario compacto de citas | `/app` → sección “Visitas”; elige un día para consultar sus solicitudes |
 | Plan Basic / Pro y pago de demostración | Intenta contactar después de alcanzar el límite Basic |
-| Panel gerencial | `/admin`; usa el botón “Entrar como administrador de demo” (`admin@roomycampus.ec`) |
+| Panel gerencial | `/admin`; inicia sesión con una cuenta de administrador de demo |
 | Páginas de resumen, monitoreo, verificación y analítica | `/admin`; cada opción lateral abre su propia vista explicativa |
 | Panel de administrador del alojamiento | `/propietario`; cuenta demo `alojamiento@roomycampus.ec` |
+| Crear anuncio y enviarlo a revisión | `/propietario` → Mis alojamientos → Agregar alojamiento; completa datos y confirmaciones de verificación |
 | Comentarios, alertas, consultas y agenda de residentes | `/propietario` → Comentarios y alertas, Mensajes o Visitas |
 | Revisión y rechazo de un anuncio sospechoso | Panel → Bandeja de verificación → anuncio reportado |
 | Analítica de demanda y precio por m²; exportación CSV | Panel gerencial |
@@ -90,7 +94,7 @@ El generador consulta Nominatim/Overpass para identificar áreas y accesos, y OS
 | Aprobar siguiente pendiente | Aprueba y publica la siguiente propiedad normal pendiente |
 | Reiniciar datos de demo | Restaura inventario, calendario, favoritos y visitas iniciales |
 
-El estado se guarda en el navegador y se sincroniza entre pestañas mediante `localStorage`. Los accesos y cuentas de los tres roles son simulados y se mantienen por pestaña; no hay contraseñas, servicio de identidad ni mensajes reales. Las solicitudes de contacto y visitas se comparten localmente para demostrar el panel del alojamiento. En modo `?guion`, el estado inicial se restablece y se expone el store y sus acciones en `window.__ROOMYCAMPUS__` para preparar tomas repetibles.
+El estado se guarda en el navegador y se sincroniza entre pestañas mediante `localStorage`. Los accesos y cuentas de los tres roles son simulados y se mantienen por pestaña; no hay contraseñas, servicio de identidad ni mensajes reales. El registro de administrador está abierto únicamente por ser un prototipo local: cualquier persona puede seleccionar ese rol, por lo que no debe usarse como control de acceso en producción. Las solicitudes de contacto, visitas y anuncios enviados a verificación se comparten localmente. La lista de verificación es una declaración de demo y no valida identidad ni documentos. Las preferencias de cookies también se guardan localmente y no habilitan herramientas de análisis ni cookies opcionales de terceros en este prototipo. En modo `?guion`, el estado inicial se restablece y se expone el store y sus acciones en `window.__ROOMYCAMPUS__` para preparar tomas repetibles.
 
 ## Documentación adicional
 

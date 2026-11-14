@@ -17,6 +17,7 @@ import {
   Clock3,
   Compass,
   CreditCard,
+  Cookie,
   Heart,
   Home,
   KeyRound,
@@ -38,6 +39,7 @@ import {
   Droplets,
 } from "lucide-react";
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import roomyCampusLogo from "../asset_logo/Logo.jpeg";
 import { filterAndSortListings } from "./catalog";
 import {
   academicStart,
@@ -46,6 +48,7 @@ import {
   listingTotal,
   residentAlerts,
   residentReviews,
+  seedListings,
   type Listing,
   type PropertyKind,
   type PropertyStatus,
@@ -84,16 +87,52 @@ const statusNames: Record<PropertyStatus, string> = {
 };
 
 const kindNames: Record<PropertyKind, string> = { Suite: "Suite", Cuarto: "Cuarto", Roomie: "Roomie" };
+const cookiePreferencesKey = "roomycampus-cookie-preferences-v1";
+
+type CookiePreferences = {
+  necessary: true;
+  preferences: boolean;
+  analytics: boolean;
+  thirdParty: boolean;
+};
+
+const defaultCookiePreferences: CookiePreferences = {
+  necessary: true,
+  preferences: false,
+  analytics: false,
+  thirdParty: false,
+};
+
+function readCookiePreferences(): CookiePreferences | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const saved = window.localStorage.getItem(cookiePreferencesKey);
+    if (!saved) return null;
+    const parsed = JSON.parse(saved) as Partial<CookiePreferences>;
+    if (
+      parsed.necessary === true &&
+      typeof parsed.preferences === "boolean" &&
+      typeof parsed.analytics === "boolean" &&
+      typeof parsed.thirdParty === "boolean"
+    ) {
+      return {
+        necessary: true,
+        preferences: parsed.preferences,
+        analytics: parsed.analytics,
+        thirdParty: parsed.thirdParty,
+      };
+    }
+    throw new Error("Las preferencias de cookies guardadas no tienen un formato válido.");
+  } catch (error) {
+    console.error("No se pudieron leer las preferencias de cookies.", error);
+    return null;
+  }
+}
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <Link aria-label="RoomyCampus, inicio" className={`brand ${compact ? "brand--compact" : ""}`} to="/">
-      <span className="brand__mark">r.</span>
-      {!compact && (
-        <span className="brand__wordmark">
-          roomy<span>campus</span>
-        </span>
-      )}
+      <img alt="RoomyCampus" className="brand__logo" src={roomyCampusLogo} />
     </Link>
   );
 }
@@ -120,7 +159,7 @@ function Toasts({ items }: { items: ToastMessage[] }) {
   );
 }
 
-function HomePage() {
+function HomePage({ onOpenCookieSettings }: { onOpenCookieSettings: () => void }) {
   const navigate = useNavigate();
   return (
     <main className="landing">
@@ -188,14 +227,14 @@ function HomePage() {
           <span className="role-card__copy"><strong>Crear cuenta de estudiante</strong><small>Regístrate con tu correo ESPOL para guardar y agendar.</small></span>
           <ArrowRight size={19} />
         </button>
-        <button className="role-card" onClick={() => navigate("/admin")} type="button">
-          <span className="role-card__icon role-card__icon--dark"><ArrowUpRight size={22} /></span>
-          <span className="role-card__copy"><strong>Ver panel gerencial</strong><small>Indicadores, revisión de propiedades y tendencias.</small></span>
+        <button className="role-card" onClick={() => navigate("/registro-arrendador")} type="button">
+          <span className="role-card__icon"><Building2 size={22} /></span>
+          <span className="role-card__copy"><strong>Crear cuenta de arrendador</strong><small>Publica alojamientos y envíalos a verificación.</small></span>
           <ArrowRight size={19} />
         </button>
-        <button className="role-card" onClick={() => navigate("/propietario")} type="button">
-          <span className="role-card__icon"><Building2 size={22} /></span>
-          <span className="role-card__copy"><strong>Administrar un alojamiento</strong><small>Gestiona mensajes, visitas, comentarios y alertas.</small></span>
+        <button className="role-card" onClick={() => navigate("/registro-admin")} type="button">
+          <span className="role-card__icon role-card__icon--dark"><ArrowUpRight size={22} /></span>
+          <span className="role-card__copy"><strong>Crear cuenta de administrador</strong><small>Accede a indicadores y revisión de propiedades (demo).</small></span>
           <ArrowRight size={19} />
         </button>
       </section>
@@ -203,8 +242,116 @@ function HomePage() {
         <Brand compact />
         <span>Proyecto académico · datos de mercado simulados</span>
         <span>Guayaquil, Ecuador</span>
+        <button className="cookie-footer-link" onClick={onOpenCookieSettings} type="button">Configurar cookies</button>
       </footer>
     </main>
+  );
+}
+
+function CookieConsent({
+  openSettings,
+  onCloseSettings,
+}: {
+  openSettings: boolean;
+  onCloseSettings: () => void;
+}) {
+  const [preferences, setPreferences] = useState(readCookiePreferences);
+  const [isOpen, setIsOpen] = useState(() => preferences === null);
+  const [isConfiguring, setIsConfiguring] = useState(false);
+  const [showPolicy, setShowPolicy] = useState(false);
+  const [draft, setDraft] = useState<CookiePreferences>(() => preferences ?? defaultCookiePreferences);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!openSettings) return;
+    setDraft(preferences ?? defaultCookiePreferences);
+    setIsConfiguring(true);
+    setIsOpen(true);
+    setError("");
+  }, [openSettings, preferences]);
+
+  function save(next: CookiePreferences) {
+    try {
+      window.localStorage.setItem(cookiePreferencesKey, JSON.stringify(next));
+      setPreferences(next);
+      setDraft(next);
+      setIsOpen(false);
+      setIsConfiguring(false);
+      setShowPolicy(false);
+      setError("");
+      onCloseSettings();
+    } catch (saveError) {
+      console.error("No se pudieron guardar las preferencias de cookies.", saveError);
+      setError("No pudimos guardar tu selección. Revisa la configuración de almacenamiento del navegador.");
+    }
+  }
+
+  function openConfiguration() {
+    setDraft(preferences ?? defaultCookiePreferences);
+    setIsConfiguring(true);
+    setIsOpen(true);
+    setError("");
+  }
+
+  if (!isOpen) {
+    return (
+      <button aria-label="Configurar cookies" className="cookie-settings-fab" onClick={openConfiguration} type="button">
+        <Cookie size={16} /> Cookies
+      </button>
+    );
+  }
+
+  return (
+    <aside aria-labelledby="cookie-consent-title" aria-live="polite" className="cookie-banner" role="dialog">
+      <div className="cookie-banner__heading">
+        <span className="cookie-banner__icon"><Cookie size={19} /></span>
+        <h2 id="cookie-consent-title">Tu privacidad es importante para RoomyCampus</h2>
+      </div>
+      <p>Utilizamos cookies necesarias para el funcionamiento de nuestra plataforma y, con tu autorización, cookies opcionales para recordar preferencias y mejorar tu experiencia de búsqueda.</p>
+      <p>Puedes aceptar, rechazar o personalizar su uso. Conoce más en nuestra{" "}
+        <button className="cookie-inline-link" onClick={() => setShowPolicy(!showPolicy)} type="button">Política de Cookies</button>.
+      </p>
+      {showPolicy && <section className="cookie-policy-details">
+        <strong>Política de Cookies</strong>
+        <p>Las cookies necesarias permiten las funciones básicas. Las preferencias, analítica y cookies de terceros son opcionales y solo se guardan si las autorizas. Este prototipo no activa herramientas de seguimiento ni cookies opcionales de terceros; tu elección se conserva localmente en este navegador.</p>
+      </section>}
+      {isConfiguring && <div className="cookie-categories">
+        <label className="cookie-category">
+          <input checked disabled type="checkbox" />
+          <span><strong>Cookies necesarias</strong><small>Requeridas para el funcionamiento básico; siempre activas.</small></span>
+          <em>Siempre activas</em>
+        </label>
+        <label className="cookie-category">
+          <input checked={draft.preferences} onChange={(event) => setDraft({ ...draft, preferences: event.target.checked })} type="checkbox" />
+          <span><strong>Cookies de preferencias</strong><small>Permiten recordar tus preferencias de búsqueda.</small></span>
+        </label>
+        <label className="cookie-category">
+          <input checked={draft.analytics} onChange={(event) => setDraft({ ...draft, analytics: event.target.checked })} type="checkbox" />
+          <span><strong>Cookies de análisis</strong><small>Ayudan a comprender el uso de la plataforma.</small></span>
+        </label>
+        <label className="cookie-category">
+          <input checked={draft.thirdParty} onChange={(event) => setDraft({ ...draft, thirdParty: event.target.checked })} type="checkbox" />
+          <span><strong>Cookies opcionales de terceros</strong><small>Servicios externos integrados; no están activos en esta demo.</small></span>
+        </label>
+      </div>}
+      {error && <p className="cookie-error" role="alert">{error}</p>}
+      <div className="cookie-actions">
+        {isConfiguring ? (
+          <>
+            <button className="button button--primary" onClick={() => save(draft)} type="button">Guardar mi selección</button>
+            <button className="button button--outline" onClick={() => save(defaultCookiePreferences)} type="button">Rechazar todas</button>
+            <button className="cookie-secondary-button" onClick={() => save({ necessary: true, preferences: true, analytics: true, thirdParty: true })} type="button">Aceptar todas</button>
+            {preferences && <button className="cookie-secondary-button" onClick={() => { setIsConfiguring(false); setIsOpen(false); onCloseSettings(); }} type="button">Cancelar</button>}
+          </>
+        ) : (
+          <>
+            <button className="button button--primary" onClick={() => save({ necessary: true, preferences: true, analytics: true, thirdParty: true })} type="button">Aceptar todas</button>
+            <button className="button button--outline" onClick={() => save(defaultCookiePreferences)} type="button">Rechazar todas</button>
+            <button className="cookie-secondary-button" onClick={openConfiguration} type="button">Configurar cookies</button>
+          </>
+        )}
+      </div>
+    </aside>
   );
 }
 
@@ -212,7 +359,7 @@ function LoginPage({ role, signup = false }: { role: UserRole; signup?: boolean 
   const navigate = useNavigate();
   const { authenticate } = useDemoStore();
   const [email, setEmail] = useState(
-    role === "admin" ? "admin@roomycampus.ec" : role === "landlord" ? "alojamiento@roomycampus.ec" : "",
+    signup ? "" : role === "admin" ? "admin@roomycampus.ec" : role === "landlord" ? "alojamiento@roomycampus.ec" : "",
   );
   const [name, setName] = useState("");
   const [creatingAccount, setCreatingAccount] = useState(signup);
@@ -225,26 +372,23 @@ function LoginPage({ role, signup = false }: { role: UserRole; signup?: boolean 
       setError("Ingresa tu correo institucional con dominio @espol.edu.ec.");
       return;
     }
-    if (role === "admin" && normalizedEmail !== "admin@roomycampus.ec") {
-      setError("Para esta demo, usa admin@roomycampus.ec.");
-      return;
-    }
-    if (role === "landlord" && normalizedEmail !== "alojamiento@roomycampus.ec") {
-      setError("Para esta demo, usa alojamiento@roomycampus.ec.");
-      return;
-    }
     if (creatingAccount && name.trim().length < 2) {
       setError("Escribe tu nombre para crear la cuenta de demostración.");
       return;
     }
-    authenticate(normalizedEmail, role);
+    authenticate(normalizedEmail, role, creatingAccount ? name.trim() : "");
     navigate(role === "admin" ? "/admin" : role === "landlord" ? "/propietario" : "/app");
   }
 
   const isPlatformAdmin = role === "admin";
   const isLandlord = role === "landlord";
-  const heading = isPlatformAdmin ? "Panel gerencial" : isLandlord ? "Administración de alojamientos" : creatingAccount ? "Crea tu cuenta" : "Bienvenido a casa";
-  const eyebrow = isPlatformAdmin ? "ACCESO DE GESTIÓN" : isLandlord ? "PANEL DEL ALOJAMIENTO" : "TU VIDA UNIVERSITARIA, MÁS CERCA";
+  const roleLabel = isPlatformAdmin ? "administrador" : isLandlord ? "arrendador" : "estudiante";
+  const heading = creatingAccount
+    ? `Crea tu cuenta de ${roleLabel}`
+    : isPlatformAdmin ? "Panel gerencial" : isLandlord ? "Administración de alojamientos" : "Bienvenido a casa";
+  const eyebrow = creatingAccount
+    ? "REGISTRO DE DEMOSTRACIÓN"
+    : isPlatformAdmin ? "ACCESO DE GESTIÓN" : isLandlord ? "PANEL DEL ALOJAMIENTO" : "TU VIDA UNIVERSITARIA, MÁS CERCA";
 
   return (
     <main className="login-page">
@@ -253,7 +397,17 @@ function LoginPage({ role, signup = false }: { role: UserRole; signup?: boolean 
         <span className="login-symbol">{isPlatformAdmin ? <KeyRound size={23} /> : isLandlord ? <Building2 size={23} /> : <Home size={23} />}</span>
         <Eyebrow>{eyebrow}</Eyebrow>
         <h1>{heading}</h1>
-        <p>{isPlatformAdmin ? "Ingresa al espacio de administración de RoomyCampus." : isLandlord ? "Revisa las solicitudes y novedades de quienes viven en tus alojamientos." : creatingAccount ? "Regístrate con tu correo institucional para guardar propiedades y coordinar visitas." : "Accede con tu correo ESPOL para explorar propiedades verificadas."}</p>
+        <p>{creatingAccount
+          ? isPlatformAdmin
+            ? "Crea un perfil local de demostración para revisar y aprobar los anuncios enviados."
+            : isLandlord
+              ? "Crea tu perfil de arrendador para publicar alojamientos y seguir su verificación."
+              : "Regístrate con tu correo institucional para guardar propiedades y coordinar visitas."
+          : isPlatformAdmin
+            ? "Ingresa al espacio de administración de RoomyCampus."
+            : isLandlord
+              ? "Revisa las solicitudes y novedades de quienes viven en tus alojamientos."
+              : "Accede con tu correo ESPOL para explorar propiedades verificadas."}</p>
         <form className="login-form" onSubmit={signIn}>
           {creatingAccount && <><label htmlFor="account-name">Nombre completo</label><input autoComplete="name" id="account-name" onChange={(event) => { setName(event.target.value); setError(""); }} placeholder="Tu nombre" required value={name} /></>}
           <label htmlFor="email">Correo electrónico</label>
@@ -261,19 +415,25 @@ function LoginPage({ role, signup = false }: { role: UserRole; signup?: boolean 
             autoComplete="email"
             id="email"
             onChange={(event) => { setEmail(event.target.value); setError(""); }}
-            placeholder={isPlatformAdmin ? "admin@roomycampus.ec" : isLandlord ? "alojamiento@roomycampus.ec" : "nombre@espol.edu.ec"}
+            placeholder={isPlatformAdmin ? "admin@roomycampus.ec" : isLandlord ? "nombre@correo.com" : "nombre@espol.edu.ec"}
             required
             type="email"
             value={email}
           />
           {error && <span className="form-error" role="alert">{error}</span>}
           <button className="button button--primary button--full" type="submit">
-            {isPlatformAdmin ? "Ingresar al panel" : isLandlord ? "Entrar al panel del alojamiento" : creatingAccount ? "Crear cuenta de demostración" : "Continuar con ESPOL"} <ArrowRight size={17} />
+            {creatingAccount
+              ? "Crear cuenta de demostración"
+              : isPlatformAdmin
+                ? "Ingresar al panel"
+                : isLandlord ? "Entrar al panel del alojamiento" : "Continuar con ESPOL"} <ArrowRight size={17} />
           </button>
         </form>
         <div className="login-note"><ShieldCheck size={15} /> Cuenta simulada; no se guardan contraseñas ni se conecta a un servidor.</div>
-        {role === "student" && <button className="text-button login-demo" onClick={() => { setCreatingAccount(!creatingAccount); setError(""); }} type="button">{creatingAccount ? "Ya tengo cuenta · iniciar sesión" : "¿Primera vez? Crear cuenta"}</button>}
-        {role !== "student" && <button className="text-button login-demo" onClick={() => { authenticate(email, role); navigate(isPlatformAdmin ? "/admin" : "/propietario"); }} type="button">Entrar como {isPlatformAdmin ? "administrador de plataforma" : "administrador de alojamiento"} demo <ArrowRight size={15} /></button>}
+        <button className="text-button login-demo" onClick={() => { setCreatingAccount(!creatingAccount); setError(""); }} type="button">
+          {creatingAccount ? "Ya tengo cuenta · iniciar sesión" : "¿Primera vez? Crear cuenta"}
+        </button>
+        {role !== "student" && !creatingAccount && <button className="text-button login-demo" onClick={() => { authenticate(email || (isPlatformAdmin ? "admin@roomycampus.ec" : "alojamiento@roomycampus.ec"), role); navigate(isPlatformAdmin ? "/admin" : "/propietario"); }} type="button">Entrar con cuenta demo <ArrowRight size={15} /></button>}
       </section>
       <span className="prototype-disclaimer">Prototipo académico · usuarios y alojamientos de ejemplo</span>
     </main>
@@ -626,11 +786,137 @@ function StudentApp() {
 
 type LandlordSection = "overview" | "properties" | "messages" | "feedback" | "visits";
 
+type ListingDraft = {
+  title: string;
+  address: string;
+  sector: string;
+  kind: PropertyKind;
+  rent: number;
+  water: number;
+  power: number;
+  wifi: number;
+  area: number;
+  bedrooms: number;
+  bathrooms: number;
+};
+
+function LandlordListingWizard({
+  ownerEmail,
+  landlordName,
+  onCancel,
+  onSubmit,
+}: {
+  ownerEmail: string;
+  landlordName: string;
+  onCancel: () => void;
+  onSubmit: (listing: Listing) => void;
+}) {
+  const [step, setStep] = useState<1 | 2>(1);
+  const [draft, setDraft] = useState<ListingDraft | null>(null);
+
+  function saveDetails(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    setDraft({
+      title: String(values.get("title")),
+      address: String(values.get("address")),
+      sector: String(values.get("sector")),
+      kind: String(values.get("kind")) as PropertyKind,
+      rent: Number(values.get("rent")),
+      water: Number(values.get("water")),
+      power: Number(values.get("power")),
+      wifi: Number(values.get("wifi")),
+      area: Number(values.get("area")),
+      bedrooms: Number(values.get("bedrooms")),
+      bathrooms: Number(values.get("bathrooms")),
+    });
+    setStep(2);
+  }
+
+  function sendForVerification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!draft) return;
+    const reference = seedListings.find((listing) => listing.sector === draft.sector) ?? seedListings[0];
+    const listing: Listing = {
+      id: `landlord-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      title: draft.title,
+      address: draft.address,
+      sector: draft.sector,
+      kind: draft.kind,
+      status: "pending",
+      rent: draft.rent,
+      utilities: { water: draft.water, power: draft.power, wifi: draft.wifi },
+      area: draft.area,
+      bedrooms: draft.bedrooms,
+      bathrooms: draft.bathrooms,
+      latitude: reference.latitude,
+      longitude: reference.longitude,
+      walkMinutes: reference.walkMinutes,
+      distanceKm: reference.distanceKm,
+      verified: false,
+      ownerEmail,
+      landlord: landlordName || ownerEmail.split("@")[0],
+      rating: 0,
+      reviews: 0,
+      image: reference.image,
+      note: "Anuncio enviado por un arrendador de demostración. Las declaraciones de identidad, autorización y evidencia aún requieren revisión.",
+    };
+    onSubmit(listing);
+  }
+
+  return (
+    <section aria-labelledby="listing-wizard-title" className="review-card listing-wizard">
+      <div className="section-heading">
+        <span><Eyebrow icon={ShieldCheck}>PUBLICAR ALOJAMIENTO · PASO {step} DE 2</Eyebrow><h2 id="listing-wizard-title">{step === 1 ? "Datos del alojamiento" : "Verificación previa"}</h2></span>
+        <button aria-label="Cancelar publicación" className="icon-button" onClick={onCancel} type="button"><X size={18} /></button>
+      </div>
+      <div aria-label={`Paso ${step} de 2`} className="listing-wizard__steps">
+        <span className={step === 1 ? "listing-wizard__step--active" : ""}><b>1</b> Datos</span>
+        <span className={step === 2 ? "listing-wizard__step--active" : ""}><b>2</b> Verificación</span>
+      </div>
+      {step === 1 ? (
+        <form className="listing-form" onSubmit={saveDetails}>
+          <label>Título del anuncio<input autoComplete="off" maxLength={70} name="title" placeholder="Ej. Suite amoblada cerca de ESPOL" required /></label>
+          <label>Sector<select name="sector" required><option value="">Selecciona un sector</option>{["Los Ceibos", "Mapasingue", "Vía a la Costa", "Urdesa"].map((sector) => <option key={sector}>{sector}</option>)}</select></label>
+          <label>Dirección o referencia<input autoComplete="street-address" maxLength={120} name="address" placeholder="Urbanización, calle o referencia" required /></label>
+          <label>Modalidad<select name="kind" required><option value="Suite">Suite</option><option value="Cuarto">Cuarto</option><option value="Roomie">Roomie</option></select></label>
+          <label>Renta mensual (USD)<input min="1" name="rent" required step="1" type="number" /></label>
+          <label>Área (m²)<input min="1" name="area" required step="1" type="number" /></label>
+          <label>Dormitorios<input defaultValue="1" min="1" name="bedrooms" required step="1" type="number" /></label>
+          <label>Baños<input defaultValue="1" min="1" name="bathrooms" required step="1" type="number" /></label>
+          <label>Agua mensual (USD)<input defaultValue="0" min="0" name="water" required step="1" type="number" /></label>
+          <label>Luz mensual (USD)<input defaultValue="0" min="0" name="power" required step="1" type="number" /></label>
+          <label>Wifi mensual (USD)<input defaultValue="0" min="0" name="wifi" required step="1" type="number" /></label>
+          <p className="listing-wizard__note">La foto y las coordenadas del prototipo son referenciales. El anuncio no será visible hasta aprobar su verificación.</p>
+          <div className="listing-form__actions"><button className="button button--outline" onClick={onCancel} type="button">Cancelar</button><button className="button button--primary" type="submit">Continuar a verificación <ArrowRight size={16} /></button></div>
+        </form>
+      ) : (
+        <form className="verification-form" onSubmit={sendForVerification}>
+          <p>Confirma que puedes respaldar la información. No cargues documentos personales: este prototipo no almacena archivos y la aprobación la realiza el administrador.</p>
+          <label><input required type="checkbox" /> Confirmo mi identidad y puedo presentarla para validación.</label>
+          <label><input required type="checkbox" /> Soy propietario o tengo autorización para ofrecer el alojamiento.</label>
+          <label><input required type="checkbox" /> Cuento con fotos actuales y puedo confirmar la dirección.</label>
+          <label><input required type="checkbox" /> Puedo explicar las condiciones del contrato antes de publicar.</label>
+          <div className="verification-form__notice"><ShieldCheck size={17} /><span>Al enviar, el anuncio quedará como <strong>Por verificar</strong> y pasará a la bandeja del administrador.</span></div>
+          <div className="listing-form__actions"><button className="button button--outline" onClick={() => setStep(1)} type="button"><ArrowLeft size={15} /> Volver</button><button className="button button--primary" type="submit">Enviar a revisión <ShieldCheck size={16} /></button></div>
+        </form>
+      )}
+    </section>
+  );
+}
+
 function LandlordApp() {
-  const { email, logout, listings, visits, contactRequests, handleContactRequest } = useDemoStore();
+  const { email, displayName, logout, listings, visits, contactRequests, handleContactRequest, submitListing } = useDemoStore();
   const [section, setSection] = useState<LandlordSection>("overview");
-  const managedListings = listings.filter((listing) => listing.status !== "rejected" && listing.status !== "pending");
-  const listingIds = new Set(managedListings.map((listing) => listing.id));
+  const [publishing, setPublishing] = useState(false);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const ownedListings = listings.filter((listing) =>
+    listing.ownerEmail
+      ? listing.ownerEmail === email
+      : email === "alojamiento@roomycampus.ec" && listing.status !== "rejected",
+  );
+  const managedListings = ownedListings.filter((listing) => listing.status !== "rejected" && listing.status !== "pending");
+  const listingIds = new Set(ownedListings.map((listing) => listing.id));
   const messages = contactRequests.filter((request) => listingIds.has(request.listingId));
   const openMessages = messages.filter((request) => request.status === "new");
   const upcomingVisits = visits.filter((visit) => listingIds.has(visit.listingId));
@@ -649,11 +935,17 @@ function LandlordApp() {
     { id: "visits", label: "Visitas", icon: CalendarDays },
   ];
 
+  function notify(text: string) {
+    const id = ++toastSequence;
+    setToasts((items) => [...items, { id, text }]);
+    window.setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), 3600);
+  }
+
   return (
     <main className="admin-page landlord-page">
       <aside className="admin-sidebar">
         <div className="admin-sidebar__brand"><Brand /><span>ALOJAMIENTOS</span></div>
-        <div className="admin-profile"><span className="admin-profile__avatar">A</span><span><strong>Administrador</strong><small>del alojamiento · demo</small></span><ChevronDown size={15} /></div>
+        <div className="admin-profile"><span className="admin-profile__avatar">{(displayName || "A").charAt(0).toUpperCase()}</span><span><strong>{displayName || "Arrendador"}</strong><small>cuenta de alojamiento · demo</small></span><ChevronDown size={15} /></div>
         <span className="sidebar-label">GESTIÓN DEL ALOJAMIENTO</span>
         {nav.map(({ id, label, icon: Icon }) => <button aria-current={section === id ? "page" : undefined} className={`sidebar-link ${section === id ? "sidebar-link--active" : ""}`} key={id} onClick={() => setSection(id)} type="button"><Icon size={17} /> {label}{id === "messages" && openMessages.length > 0 && <span className="sidebar-count">{openMessages.length}</span>}</button>)}
         <div className="sidebar-bottom">
@@ -664,7 +956,7 @@ function LandlordApp() {
       <div className="admin-main">
         <header className="admin-topbar"><div className="breadcrumb">Alojamiento <span>/</span> <strong>{pageInfo[section].title}</strong></div><div className="admin-topbar__right"><span className="admin-live"><i /> Prototipo en vivo</span><span className="admin-topbar__email">{email}</span><span className="admin-avatar">AL</span></div></header>
         <div className="admin-content landlord-content">
-          <section className="admin-title-row"><div><Eyebrow icon={Building2}>PANEL DEL ALOJAMIENTO</Eyebrow><h1>{pageInfo[section].title}</h1><p>{pageInfo[section].description}</p></div></section>
+          <section className="admin-title-row"><div><Eyebrow icon={Building2}>PANEL DEL ALOJAMIENTO</Eyebrow><h1>{pageInfo[section].title}</h1><p>{pageInfo[section].description}</p></div>{section === "properties" && !publishing && <button className="button button--primary" onClick={() => setPublishing(true)} type="button"><Plus size={16} /> Agregar alojamiento</button>}</section>
           {section === "overview" && <>
             <section aria-label="Resumen del alojamiento" className="metrics-grid">
               <MetricCard icon={Home} label="Alojamientos publicados" value={String(managedListings.length)} note="Inventario de ejemplo" />
@@ -682,13 +974,30 @@ function LandlordApp() {
               </article>
             </div>
           </>}
-          {section === "properties" && <div className="landlord-property-grid">{managedListings.map((listing) => <article className="landlord-property-card" key={listing.id}><img alt="" src={listing.image} /><div><span className={`availability availability--${listing.status}`}>{statusNames[listing.status]}</span><h2>{listing.title}</h2><p>{listing.sector} · {listing.kind} · {listing.area} m²</p><strong>{money(listingTotal(listing))} / mes</strong></div></article>)}</div>}
+          {section === "properties" && (publishing
+            ? <LandlordListingWizard
+                landlordName={displayName}
+                onCancel={() => setPublishing(false)}
+                onSubmit={(listing) => {
+                  submitListing(listing);
+                  setPublishing(false);
+                  notify("Anuncio enviado a verificación. Aún no será visible para estudiantes.");
+                }}
+                ownerEmail={email}
+              />
+            : <section aria-label="Mis alojamientos">
+                <div className="landlord-property-grid">
+                  {ownedListings.map((listing) => <article className="landlord-property-card" key={listing.id}><img alt="" src={listing.image} /><div><span className={`availability availability--${listing.status}`}>{statusNames[listing.status]}</span><h2>{listing.title}</h2><p>{listing.sector} · {listing.kind} · {listing.area} m²</p><strong>{money(listingTotal(listing))} / mes</strong></div></article>)}
+                  {ownedListings.length === 0 && <div className="review-empty"><strong>Aún no tienes alojamientos</strong><p>Agrega uno para iniciar el proceso de verificación.</p></div>}
+                </div>
+              </section>)}
           {section === "messages" && <section className="review-card landlord-message-list"><div className="section-heading"><span><Eyebrow icon={MessageSquareText}>CONTACTOS</Eyebrow><h2>Solicitudes recibidas</h2></span><span className="review-count">{openMessages.length} nuevas</span></div>{messages.length ? messages.map((request) => <ContactRequestCard key={request.id} listings={listings} onHandle={handleContactRequest} request={request} />) : <div className="review-empty"><strong>No hay solicitudes todavía</strong><p>Cuando un estudiante te contacte, encontrarás el mensaje aquí.</p></div>}</section>}
           {section === "feedback" && <div className="landlord-overview-grid"><section className="review-card"><div className="section-heading"><span><Eyebrow icon={Star}>EXPERIENCIAS</Eyebrow><h2>Comentarios de residentes</h2></span></div>{residentReviews.filter((review) => listingIds.has(review.listingId)).map((review) => <article className="resident-review-card" key={review.id}><div><strong>{review.author}</strong><span><Star fill="currentColor" size={13} /> {review.rating}/5</span></div><p>{review.comment}</p><small>{listings.find((item) => item.id === review.listingId)?.title} · {review.date}</small></article>)}</section><section className="review-card"><div className="section-heading"><span><Eyebrow icon={CircleAlert}>REPORTES</Eyebrow><h2>Alertas para atender</h2></span><span className="review-count">{residentAlerts.length} abiertas</span></div>{residentAlerts.filter((alert) => listingIds.has(alert.listingId)).map((alert) => <ResidentAlertCard alert={alert} key={alert.id} listings={listings} />)}</section></div>}
           {section === "visits" && <VisitCalendar email={email} listingIds={[...listingIds]} listings={listings} visits={upcomingVisits} />}
           <footer className="admin-footer"><span>RoomyCampus · panel académico de demostración; mensajes y comentarios son simulados.</span></footer>
         </div>
       </div>
+      <Toasts items={toasts} />
     </main>
   );
 }
@@ -946,17 +1255,24 @@ function DemoPanel() {
 
 function App() {
   const role = useDemoStore((state) => state.role);
+  const [cookieSettingsOpen, setCookieSettingsOpen] = useState(false);
   return (
     <>
       <Routes>
-        <Route element={<HomePage />} path="/" />
+        <Route element={<HomePage onOpenCookieSettings={() => setCookieSettingsOpen(true)} />} path="/" />
         <Route element={role === "student" ? <StudentApp /> : <LoginPage role="student" />} path="/app" />
         <Route element={role === "admin" ? <AdminApp /> : <LoginPage role="admin" />} path="/admin" />
         <Route element={<LoginPage role="student" signup />} path="/registro" />
+        <Route element={<LoginPage role="landlord" signup />} path="/registro-arrendador" />
+        <Route element={<LoginPage role="admin" signup />} path="/registro-admin" />
         <Route element={role === "landlord" ? <LandlordApp /> : <LoginPage role="landlord" />} path="/propietario" />
         <Route element={<Navigate replace to="/" />} path="*" />
       </Routes>
       <DemoPanel />
+      <CookieConsent
+        onCloseSettings={() => setCookieSettingsOpen(false)}
+        openSettings={cookieSettingsOpen}
+      />
     </>
   );
 }
